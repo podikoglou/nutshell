@@ -1,13 +1,12 @@
 import os
 import os.path
-from typing import Callable, List
+from typing import Callable, List, Optional
 from dataclasses import dataclass
 
 # custom exception
 class NutshellException(BaseException):
     def __str__(self) -> str:
         return f'nutshell: {": ".join(self.args)}'
-
 
 # builtins
 @dataclass
@@ -31,6 +30,13 @@ class CdBuiltin(Builtin):
 
         os.chdir(args[0])
         return 0
+
+builtins = [CdBuiltin()]
+
+def get_builtin(name: str) -> Optional[Builtin]:
+    for builtin in builtins:
+        if name in builtin.aliases:
+            return builtin
 
 # prompt
 prompt: str
@@ -57,7 +63,9 @@ if __name__ == '__main__':
         if not line.strip(' '):
             continue
 
-        program = line.split(' ')[0]
+        split = line.split(' ')
+        program = split[0]
+        args = split[1:]
         binary: str
 
         try:
@@ -75,16 +83,35 @@ if __name__ == '__main__':
             # if it's not
             else:
 
+                # search for it in path
                 path = search_path(program)
 
                 # if the binary path was not returned (which means it doesn't exist)
                 if path == None:
-                    raise NutshellException(program, 'not found')
+
+                    # if it's a builtin, execute it
+                    builtin: Optional[Builtin] = get_builtin(program)
+                    if builtin:
+                        builtin.function(args)
+                        continue
+
+                    # if it's not
+                    else:
+                        raise NutshellException(program, 'not found')
 
                 # if it did
                 else:
                     binary = path
 
-            print(binary)
+            # execute program
+            pid: int = os.fork()
+            
+            if pid == 0:
+                os.execv(program, split)
+            elif pid < 0:
+                raise NutshellException(program, 'error forking')
+            else:
+                raise NutshellException(program, 'weird??')
+
         except NutshellException as exception:
             print(exception)
