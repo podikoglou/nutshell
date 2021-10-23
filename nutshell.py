@@ -1,17 +1,13 @@
 import os
 import os.path
-from typing import Callable, Iterable, List
+from typing import Callable, List
 from dataclasses import dataclass
 
 # custom exception
 class NutshellException(BaseException):
-    message: str
-
-    def __init__(self, *args):
-        self.message = f'nutshell: {": ".join(args)}'
-
     def __str__(self) -> str:
-        return self.message
+        return f'nutshell: {": ".join(self.args)}'
+
 
 # builtins
 @dataclass
