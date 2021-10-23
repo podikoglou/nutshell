@@ -1,5 +1,7 @@
 import os
 import os.path
+from typing import Callable, Iterable, List
+from dataclasses import dataclass
 
 # custom exception
 class NutshellException(BaseException):
@@ -10,6 +12,29 @@ class NutshellException(BaseException):
 
     def __str__(self) -> str:
         return self.message
+
+# builtins
+@dataclass
+class Builtin:
+
+    aliases: List[str]
+    function: Callable[[List[str]], int]
+
+class CdBuiltin(Builtin):
+
+    def __init__(self):
+        self.aliases = ['cd']
+        self.function = self.execute
+
+    def execute(self, args: List[str]) -> int:
+        if not args:
+            return 1
+
+        if os.path.isdir(args[0]):
+            return 1
+
+        os.chdir(args[0])
+        return 0
 
 # prompt
 prompt: str
@@ -22,7 +47,7 @@ else:
 
 # PATH
 def search_path(program: str):
-    for entry in os.environ['PATH'].split(';'):
+    for entry in os.environ['PATH'].split(':'):
         path = os.path.join(entry, program)
 
         if os.path.exists(path) and os.path.isfile(path):
