@@ -29,40 +29,41 @@ def search_path(program: str):
             return path
 
 # REPL
-while True:
-    line = input(prompt)
+if __name__ == '__main__':
+    while True:
+        line = input(prompt)
 
-    if not line.strip(' '):
-        continue
+        if not line.strip(' '):
+            continue
 
-    program = line.split(' ')[0]
-    binary: str
+        program = line.split(' ')[0]
+        binary: str
 
-    try:
-        # if the program is a path
-        if os.path.sep in program:
+        try:
+            # if the program is a path
+            if os.path.sep in program:
 
-            # if the path exists
-            if os.path.exists(program) and os.path.isfile(program):
-                binary = program
+                # if the path exists
+                if os.path.exists(program) and os.path.isfile(program):
+                    binary = program
 
-            # if it doesn't
+                # if it doesn't
+                else:
+                    raise NutshellException(program, 'not found')
+
+            # if it's not
             else:
-                raise NutshellException(program, 'not found')
 
-        # if it's not
-        else:
+                path = search_path(program)
 
-            path = search_path(program)
+                # if the binary path was not returned (which means it doesn't exist)
+                if path == None:
+                    raise NutshellException(program, 'not found')
 
-            # if the binary path was not returned (which means it doesn't exist)
-            if path == None:
-                raise NutshellException(program, 'not found')
+                # if it did
+                else:
+                    binary = path
 
-            # if it did
-            else:
-                binary = path
-
-        print(binary)
-    except NutshellException as exception:
-        print(exception)
+            print(binary)
+        except NutshellException as exception:
+            print(exception)
